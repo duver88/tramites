@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Widget Trámites y Servicios - Bucaramanga</title>
+
+  <!-- Bootstrap / Icons / Fonts -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Oswald:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    body{font-family:'Ubuntu',sans-serif}
+    .title-green{color:#43883D!important}
+    .text-green{color:#43883D!important}
+    .btn-green{background:#43883D!important;border-color:#43883D!important;color:#fff!important}
+    .btn-green:hover{background:#285F19!important;border-color:#285F19!important}
+    .btn-outline-green{color:#43883D!important;border-color:#43883D!important}
+    .btn-outline-green:hover{background:#43883D!important;color:#fff!important}
+
+    .tramite-card{border:2px solid #e9ecef;border-radius:.75rem;transition:.3s;overflow:hidden}
+    .tramite-card:hover{border-color:#43883D;box-shadow:0 4px 12px rgba(67,136,61,.15)}
+    .tramite-card-destacado{border:3px solid #43883D!important;background:#f8fef8;box-shadow:0 6px 20px rgba(67,136,61,.25)!important}
+    .tramite-card-destacado::before{content:"★";position:absolute;top:10px;right:10px;font-size:1.5rem;color:#43883D}
+    .info-pill{background:linear-gradient(135deg,#43883D,#5a9b54);color:#fff;padding:.5rem 1rem;border-radius:20px;font-size:.85rem;font-weight:500}
+
+    .modalidad-badge{font-size:.7rem;padding:.25rem .5rem;border-radius:.375rem}
+    .modalidad-presencial{background:#e3f2fd;color:#1976d2;border:1px solid #bbdefb}
+    .modalidad-online{background:#e8f5e8;color:#388e3c;border:1px solid #c8e6c9}
+    .modalidad-parcial{background:#fff3e0;color:#f57c00;border:1px solid #ffcc02}
+
+    .stats-icon{
+      width:4rem;
+      height:4rem;
+      background:linear-gradient(135deg,#43883D,#5a9b54);
+      color:#fff;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.5rem;
+      margin:0 auto 1rem auto;
+      box-shadow:0 4px 15px rgba(67,136,61,.2);
+      transition:all .3s ease;
+    }
+    .stats-icon:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 20px rgba(67,136,61,.3);
+    }
+
+    /* Normatividad unificada */
+    .normatividad-section{background:#f8f9fa;border-left:4px solid #43883D;border-radius:0 .375rem .375rem 0}
+    .normatividad-content{font-size:.875rem;line-height:1.5}
+    .collapse-toggle{cursor:pointer;transition:.3s}
+    .collapse-toggle .fa-chevron-down{transition:transform .3s}
+    .collapse-toggle[aria-expanded="true"] .fa-chevron-down{transform:rotate(180deg)}
+
+    /* Duración: panel blanco ocupando todo el ancho */
+    .duration-panel {
+      font-size:.9rem;
+      background:#fff;
+      border:none;
+      border-radius:0;
+      padding:.75rem .25rem 0 .25rem;
+      overflow-wrap:anywhere;
+      hyphens:auto;
+    }
+    .toggle{border:0;background:transparent;padding:0;text-decoration:underline;cursor:pointer;font-size:.85rem;color:#43883D}
+
+    /* Separadores solo en >= md */
+    .sep-md{border-right:0}
+    @media (min-width: 768px){
+      .sep-md{border-right:1px solid #e9ecef}
+    }
+
+    /* Contador de resultados */
+    .results-counter {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 1px solid #43883D;
+      border-radius: 25px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(67, 136, 61, 0.1);
+    }
+
+    @media (min-width:1400px){.container{max-width:1200px!important}}
+    @media (min-width:1200px) and (max-width:1399px){.container{max-width:1000px!important}}
+    @media (min-width:992px) and (max-width:1199px){.container{max-width:900px!important}}
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width:1200px;">
+    <div class="text-center mb-4">
+      <h2 class="title-green fw-bold"><i class="fas fa-file-alt me-2"></i>Trámites y servicios</h2>
+      <p class="text-muted">Encuentra y realiza los trámites del municipio de Bucaramanga</p>
+      
+      <!-- Contador de resultados -->
+      <div class="results-counter d-inline-block">
+        <i class="fas fa-list-ul me-2 text-green"></i>
+        <span class="text-green fw-semibold">
+          <span id="filtered-count">0</span> trámites encontrados
+        </span>
+      </div>
+    </div>
+
+    <!-- Buscador / Filtros -->
+    <div class="bg-light p-4 rounded-3 mb-4 shadow-sm">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label for="dependencia" class="form-label fw-semibold text-green">Dependencia</label>
+          <select id="dependencia" class="form-select">
+            <option value="">Todas las Dependencias</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="costo" class="form-label fw-semibold text-green">Costo</label>
+          <select id="costo" class="form-select">
+            <option value="">Todos los Costos</option>
+            <option value="gratuito">Gratuito</option>
+            <option value="pago">Con Costo</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="modalidad" class="form-label fw-semibold text-green">Modalidad</label>
+          <select id="modalidad" class="form-select">
+            <option value="">Todas las Modalidades</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="busqueda" class="form-label fw-semibold text-green">Filtrar por palabras</label>
+          <input id="busqueda" class="form-control" placeholder="Buscar trámites..."/>
+        </div>
+        <div class="col-md-1">
+          <label for="itemsPorPagina" class="form-label fw-semibold text-green">Mostrar</label>
+          <select id="itemsPorPagina" class="form-select">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-green w-100" onclick="filtrarTramites()"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-outline-green w-100" onclick="limpiarFiltros()"><i class="fas fa-eraser"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="tramites-container"></div>
+    <div id="no-results" class="text-center py-5" style="display:none;">
+      <div class="mb-4"><i class="fas fa-search-minus fa-3x text-muted"></i></div>
+      <h3 class="text-green">No se encontraron resultados</h3>
+      <p class="text-muted">Ajusta los filtros o usa otros términos</p>
+    </div>
+
+    <!-- Paginación -->
+    <div id="pagination-container" class="mt-4" style="display:none;">
+      <div class="text-center text-muted mb-3">
+        Mostrando <span id="inicio-rango">1</span> a <span id="fin-rango">10</span> de <span id="total-items">0</span> trámites
+      </div>
+      <div class="d-flex justify-content-center flex-wrap gap-2" id="pagination"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Pega tu ARRAY aquí
+    const tramitesData = [
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Actualización información en la base de datos del sistema de identificación y clasificación de potenciales beneficiarios de programas sociales – SISBEN",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://portalciudadano.sisben.gov.co",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=5570",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Ampliación del servicio educativo",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19836",
+    "Tiempo ": "6 Mes(es)",
+    "Costo": "Ente 160 y 500 horas de cada programa 1.5  Salario Mínimo Legal Mensual Vigente (1,950,000)",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Ascenso en el escalafón nacional docente",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19987",
+    "Tiempo ": "15 Día(s) Calendario",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Ascenso o reubicación de nivel salarial en el escalafón docente oficial",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29618",
+    "Tiempo ": "Expedición de Actos Administrativos y el cumplimiento de requisitos para lograr el ascenso o la reubicación salarial, deben cumplirse de acuerdo a las fechas del cronograma que el Ministerio de Educación Nacional expide; sin excepciones de ningún tipo.",
+    "Costo": "El Ministerio de Educación fija las características del pago del PIN",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Autorización de calendario académico especial",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=20201",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Auxilio funerario por fallecimiento de un docente pensionado",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14770",
+    "Tiempo ": "3 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cambio de nombre o razón social de un establecimiento educativo estatal o privado",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19838",
+    "Tiempo ": "1 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cambio de propietario de un establecimiento educativo",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19231",
+    "Tiempo ": "1 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cambio de sede de un establecimiento educativo",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19866",
+    "Tiempo ": "1 Mes(es) no puede exceder los seis (6) meses",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Categorización de parqueaderos",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "Categorización de Parqueaderos (bucaramanga.gov.co)",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=56699",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Certificado de estratificación socioeconómica",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://cambioestrato.bucaramanga.gov.co/",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=164302",
+    "Tiempo ": "Si se realiza vía electrónica la respuesta es inmediata, en caso de requerirse la visita de campo el tiempo de respuesta de cinco (5) días hábiles.",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Certificado de residencia",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://camevirtual.bucaramanga.gov.co/tramites/101/certificado-de-residencia/",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=17989",
+    "Tiempo ": "3Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Certificado de riesgo de predios",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "Certificado de Riesgo de Predios (bucaramanga.gov.co)",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=34432",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cesantía definitiva para docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://rrhh.gestionsecretariasdeeducacion.gov.co/humanoEL/Ingresar.aspx?Ent=Bucaramanga",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28961",
+    "Tiempo ": "15 días para emitir acto administrativo, y hasta 70 días para el pago. Después de radicada la solicitud de la prestación, con el lleno de los requisitos",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cesantías parciales para docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://rrhh.gestionsecretariasdeeducacion.gov.co/humanoEL/Ingresar.aspx?Ent=Bucaramanga",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=11073",
+    "Tiempo ": "Durante el proceso para el reconocimiento de las cesantías parciales, la Secretaría de Educación tiene 15 días hábiles para emitir Acto Administrativo para aceptación o negación por parte del docente o su apoderado. Una vez aceptado el Acto Administrativo, se continúa con el tiempo para el reconocimiento de los 70 días hábiles.",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cierre temporal o definitivo de programas de educación para el trabajo y el desarrollo humano",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19837",
+    "Tiempo ": "1 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Clasificación en el régimen de educación a un establecimiento educativo privado",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19081",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Clausura de un establecimiento educativo",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19833",
+    "Tiempo ": "1 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Concepto de uso del suelo",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://usodesuelo.bucaramanga.gov.co/consulta.php",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=20716",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Concepto sanitario",
+    "Dependencia": "SALUD",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": ".:Atención al Ciudadano - Municipio de Bucaramanga",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14850",
+    "Tiempo ": "10Día(s) Hábil(es)",
+    "Costo": "Estampilla de Pro Hospital y ordenanza 012",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Contribución por valorización",
+    "Dependencia": "VALORIZACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "SGV (bucaramanga.gov.co)",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28441",
+    "Tiempo ": "1 Hora",
+    "Costo": "Avalúo y/o liquidación.  Metodología del doble avaluo por muestreo. Se evalua en un mismo periodo o fecha, la tierra, sin obra y con obra, considerando situaciones homogéneas y/o análogas con los predios y/o inmuebles similares.",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Copia certificada de planos",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=23277",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Declaración de retención de estampillas para el bienestar del adulto mayor y procultura",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "Tramites y servicios (bucaramanga.gov.co)",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=85079",
+    "Tiempo ": "1 Dia(s) - Habil(es)",
+    "Costo": "Avalúo y/o liquidación del Pago por declaración de estampilla para el bienestar del aduto mayor o Pago por declaración de estampilla pro-cultura",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Encuesta del sistema de identificación y clasificación de potenciales beneficiarios de programas sociales - SISBEN",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://portalciudadano.sisben.gov.co",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=5767",
+    "Tiempo ": "Registro del envío de la información en el sistema de información del Sisben 8 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Fusión o conversión de establecimientos educativos oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29504",
+    "Tiempo ": "1 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Impuesto a la publicidad visual exterior",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://tramitesenlinea.bucaramanga.gov.co/publicidad-exterior#",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=20172",
+    "Tiempo ": "inmediata",
+    "Costo": "De acuerdo al avalúo o liquidación:",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Impuesto al degüello de ganado menor",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://impuestos.bucaramanga.gov.co/Impmen",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14819",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Por el degüello de ganado menor se cobrará una tarifa equivalente al CUATRO (4%) de una Unidad de Valor Tributario (U.V.T.) por cada semoviente",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Impuesto de espectáculos públicos",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://tramitesenlinea.bucaramanga.gov.co/espectaculos-publicos",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14866",
+    "Tiempo ": "1 Dia(s) - Habil(es)",
+    "Costo": "El impuesto equivaldrá al veinte por ciento (20%) sobre los ingresos brutos, obtenidos sobre el monto total de boletas de entradas. Si hay lugar se cobrará: el 10% de Ley del Deporte, 10% impuesto municipal y 10% Ley de las Artes Escénicas",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Impuesto de industria y comercio y su complementario de avisos y tableros.",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "Recibos Pago Impuestos | Alcaldía de Bucaramanga",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=8559",
+    "Tiempo ": "Factura o formulario con sello del pago de impresión Se obtiene en 1 Hora(s) - (es)",
+    "Costo": "Avalúo y/o liquidación Depende de la actividad económica que se ejerza o realice, según tarifa establecida en el Estatuto de Rentas Municipal (Acuerdo 044 de 2008) y los intereses de mora liquidados o sanciones cuando a ello haya lugar",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Impuesto predial unificado",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://referencia.bucaramanga.gov.co/",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=4865",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Avalúo y/o liquidación La constituye el avalúo catastral del predio, salvo cuando se establezca en el Municipio de Bucaramanga la declaración anual del impuesto predial unificado en cuyo caso su base gravable será el auto avaluó fijado por el propietario o poseedor del inmueble.",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Incorporación y entrega de las áreas de cesión a favor del municipio",
+    "Dependencia": "DADEP",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://tramitesenlinea.bucaramanga.gov.co/Dadep",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=43521",
+    "Tiempo ": "30 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Licencia de exhumación de cadáveres",
+    "Dependencia": "SALUD",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://camevirtual.bucaramanga.gov.co/login",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=11048",
+    "Tiempo ": "15Día(s) Calendario",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Licencia de funcionamiento de instituciones educativas que ofrezcan programas de educación formal de adultos",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29499",
+    "Tiempo ": "6 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Licencia de funcionamiento para establecimientos educativos promovidos por particulares para prestar el servicio público educativo en los niveles de preescolar, básica y media",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14760",
+    "Tiempo ": "6 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Licencia de funcionamiento para las instituciones promovidas por particulares que ofrezcan el servicio educativo para el trabajo y el desarrollo humano",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19862",
+    "Tiempo ": "6 Mes(es)",
+    "Costo": "Expedición licencia de funcionamiento 3 SMLMV",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Licencia de inhumación de cadáveres.",
+    "Dependencia": "SALUD",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://tramitesenlinea.bucaramanga.gov.co/inhumaciones",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14786",
+    "Tiempo ": "1 Hora",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Licencia de intervención del espacio público",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://ocupacionespaciopublico.bucaramanga.gov.co/",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=11028",
+    "Tiempo ": "30Día(s) Calendario",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Licencia de ocupación del espacio público para la localización de equipamiento",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "espaciopublico (bucaramanga.gov.co)",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=23856",
+    "Tiempo ": "45Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Pensión de jubilación para docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14779",
+    "Tiempo ": "4 Mes(es)",
+    "Costo": "Estampilla de Pro Hospital Universitarios de Santander, Pro Electrificación Rural, sistematización, Todo certificado o constancia que expidan los funcionarios municipales",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Pensión de jubilación por aportes",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14766",
+    "Tiempo ": "4 Mes(es)",
+    "Costo": "Estampilla de Pro Hospital Universitarios de Santander, Pro Electrificación Rural, sistematización, Todo certificado o constancia que expidan los funcionarios municipales",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Pensión de retiro de invalidez para docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14777",
+    "Tiempo ": "4 Mes(es)",
+    "Costo": "Estampilla de Pro Hospital Universitarios de Santander, Pro Electrificación Rural, sistematización, Todo certificado o constancia que expidan los funcionarios municipales",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Pensión de retiro por vejez para docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14762",
+    "Tiempo ": "4 Mes(es)",
+    "Costo": "Estampilla de Pro Hospital Universitarios de Santander, Pro Electrificación Rural, sistematización, Todo certificado o constancia que expidan los funcionarios municipales",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Pensión post-mortem para beneficiarios de docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28957",
+    "Tiempo ": "4 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Permiso para espectáculos públicos diferentes a las artes escénicas",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://tramitesenlinea.bucaramanga.gov.co/eventos-publicos",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14906",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Registro de contribuyentes del impuesto de industria y comercio",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://registroica.bucaramanga.gov.co/infoicaregistro",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14849",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Registro de información a través de aplicativo web para agentes retenedores",
+    "Dependencia": "hacienda",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://registroica.bucaramanga.gov.co/infoicaregistro",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=25495",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Registro de la publicidad exterior visual",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "Registro de publicidad exterior visual (bucaramanga.gov.co)",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14856",
+    "Tiempo ": "30Día(s) Hábil(es).  El tiempo de obtención de la inscripción puede variar de acuerdo a las visitas técnicas realizadas por parte de la Secretaría de Planeación y la Secretaría de Salud.",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Registro o renovación de programas de las instituciones promovidas por particulares que ofrezcan el servicio educativo para el trabajo y el desarrollo humano",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19864",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Ente 160 y 500 horas de cada programa 1.5  SMLMV",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Retiro de personas de la base de datos del sistema de identificación y clasificación de potenciales beneficiarios de programas sociales - SISBEN",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PARCIALMENTE EN LÍNEA",
+    "Link ": "https://portalciudadano.sisben.gov.co",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=8093",
+    "Tiempo ": "3 Mes(s) - (es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Sustitución pensional para docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "http://sac2.gestionsecretariasdeeducacion.gov.co/app_Login/?sec=12",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14790",
+    "Tiempo ": "4 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Traslado de cadáveres",
+    "Dependencia": "SALUD",
+    "Modalida ": "EN LÍNEA",
+    "Link ": "https://inhumacion.bucaramanga.gov.co/#no-back-button",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=15715",
+    "Tiempo ": "3Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Activación de ruta de protección",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=54886",
+    "Tiempo ": "1Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Ajuste de un plan parcial adoptado",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=23290",
+    "Tiempo ": "60 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Apertura y registro de libros de las organizaciones comunales de primero y segundo grado",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=10955",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Apoyo alimentario, generación de ingresos y autonomía económica",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29675",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Asistencia exequial al adulto mayor",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=46522",
+    "Tiempo ": "1 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Atención especializada a personas en condición de discapacidad",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29680",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Atender a los habitantes de calle",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=46746",
+    "Tiempo ": "4 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Autorización de Ocupación de Inmuebles",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14772",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Autorización para la operación de juegos de suerte y azar en la modalidad de rifas",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29532",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Autorización para pago subsidio a personas que han sido damnificados de cualquier tipo de desastres.",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=39804",
+    "Tiempo ": "7Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Auxilio Funerario para las víctimas del conflicto armado y desplazamiento forzado.",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=51639",
+    "Tiempo ": "1Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Auxilio para gastos de sepelio",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=15713",
+    "Tiempo ": "20 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Brindar apoyo a adultos mayores en los centros de protección social",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=48370",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Brindar apoyo logístico en actividades del programa de protección social al adulto mayor-PPSAM",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=46778",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Brindar asistencia exequial a niños y niñas",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=46527",
+    "Tiempo ": "2 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cancelación de la matrícula de arrendadores",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=20647",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cancelación de la personería jurídica de las organizaciones comunales de primero y segundo grado",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=20597",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cancelación del registro de contribuyentes del impuesto de industria y comercio",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14842",
+    "Tiempo ": "1 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Certificación de la personería jurídica y representación legal de las organizaciones comunales de primero y segundo grado",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=20573",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Certificado de paz y salvo",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29589",
+    "Tiempo ": "1 Dia(s) - Habil(es)",
+    "Costo": "Sin costoTodo certificado de paz y salvo que expida la Contralaría Departamental y Municipal, el Departamento y sus entidades descentralizadas, el municipio y sus entidades descentralizadas, se gravaran con el veinte por ciento (20%) de un salario mínimo diario legal vigente",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Cesantías definitivas a beneficiarios de un docente fallecido",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14794",
+    "Tiempo ": "3 Mes(es)",
+    "Costo": "Estampilla de Pro Hospital Universitarios de Santander, Pro Electrificación Rural, sistematización, Todo certificado o constancia que expidan los funcionarios municipales",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Concepto de perfiles viales",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=59441",
+    "Tiempo ": "8Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Concepto previo favorable para la realización de juegos de suerte y azar localizados",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=15719",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Consulta preliminar para la formulación de planes de implantación",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14854",
+    "Tiempo ": "10Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Corrección de errores e inconsistencias en declaraciones y recibos de pago",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28773",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Derecho de uso de un local de las plazas de mercado",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=52135",
+    "Tiempo ": "30Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Derechos de explotación de juegos de suerte y azar en la modalidad de rifas",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=23246",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Avalúo y/o liquidación Al momento de la autorización, la persona gestora de la rifa deberá acreditar el pago de los derechos de explotación equivalente al 14 % de los ingresos brutos, es decir el 100% del valor de las boletas emitidas",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Determinantes para el ajuste de un plan parcial",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=23278",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Determinantes para la formulación de planes parciales",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14853",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Devolución de elementos retenidos por ocupación ilegal del espacio público",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28710",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Devolución y/o compensación de pagos en exceso y pagos de lo no debido",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=16412",
+    "Tiempo ": "50 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Entregar mercados adulto mayor",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=46748",
+    "Tiempo ": "Obtención inmediata",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Esterilización canina y felina",
+    "Dependencia": "SALUD",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19165",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Exención del impuesto de espectáculos públicos",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14861",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Exención del impuesto de industria y comercio",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14857",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Exención del impuesto predial unificado",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14865",
+    "Tiempo ": "3 Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Facilidades de pago para los deudores de obligaciones tributarias",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28771",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Formulación del proyecto de plan de implantación",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28960",
+    "Tiempo ": "75Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Formulación y radicación del proyecto del plan parcial",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14876",
+    "Tiempo ": "4Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Implementación de medidas de ruta de protección",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=54897",
+    "Tiempo ": "5Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Impuesto sobre el servicio de alumbrado público",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=25812",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Avalúo y/o liquidación De conformidad con los sectores económicos que señala la Ley 142 de 1994, Industrial 5%, comercial 15%, residencial 10%",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Inclusión de personas en la base de datos del sistema de identificación y clasificación de potenciales beneficiarios de programas sociales - SISBEN",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=5789",
+    "Tiempo ": "El Departamento Nacional de Planeación-DNP, tomará 3 meses en avalar la información con las demás entidades y dar respuesta a la solicitud.",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Inscripción de dignatarios de las organizaciones comunales de primero y segundo grado",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=10901",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Inscripción o reforma de estatutos de las organizaciones comunales de primero y segundo grado",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=10929",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Legalización urbanística de asentamientos humanos",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=15763",
+    "Tiempo ": "4Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Matrícula de arrendadores",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=11013",
+    "Tiempo ": "8Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Minorías Etnicas",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=29318",
+    "Tiempo ": "4Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Modificación en el registro de contribuyentes del impuesto de industria y comercio",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14846",
+    "Tiempo ": "20Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Paz y salvo en el alumbrado público por accidentes de tránsito en Bucaramanga",
+    "Dependencia": "infraestructura",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=26983",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Avalúo y/o liquidación. Presupuesto definido de acuerdo con los daños ocasionados por el accidente de tránsito",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Pensión de sobrevivientes en la Alcaldía de Bucaramanga",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=34306",
+    "Tiempo ": "4Mes(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Permiso para demostraciones públicas de pólvora, artículos pirotécnicos o fuegos artificiales.",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=24618",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Permiso para espectáculos públicos de las artes escénicas en escenarios no habilitados.",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=7302",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Préstamo de parques y/o escenarios deportivos para realización de espectáculos de las artes escénicas.",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=44427",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Prórroga de sorteo de rifas",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28737",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Realizar capacitaciones a las Juntas de Acción Comunal en temas tales como soportes legales, funciones y trabajo en equipo en Bucaramanga",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=46777",
+    "Tiempo ": "",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Reconocimiento de escenarios habilitados para la realización de espectáculos públicos de las artes escénicas",
+    "Dependencia": "INTERIOR",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=28779",
+    "Tiempo ": "1Mes",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Reconocimiento de personería jurídica de los organismos de acción comunal de primero y segundo grado",
+    "Dependencia": "DESARROLLO SOCIAL",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=10982",
+    "Tiempo ": "15 Día(s) Hábil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Reconocimiento e Inscripción de un Cómite de Desarrollo y Control Social de los Servicios Públicos Domiciliarios en Bucaramanga",
+    "Dependencia": "UTSP",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=27248",
+    "Tiempo ": "8Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Registro de ejemplares caninos de manejo especial",
+    "Dependencia": "INTERIOR - SALUD",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19212",
+    "Tiempo ": "1 Dia(s) - Habil",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Registro de marcas de ganado",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=20525",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Impuesto de Registro de Marquillas 3 UVT",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Reliquidación pensional para docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=14792",
+    "Tiempo ": "3 Mes(es)",
+    "Costo": "Estampilla de Pro Hospital Universitarios de Santander, Pro Electrificación Rural, sistematización 0,166 SMLDV",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Retiro de avisos y tableros de una actividad o establecimiento público",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=25529",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Retiro de un hogar de la base de datos del sistema de identificación y clasificación de potenciales beneficiarios de programas sociales - SISBEN",
+    "Dependencia": "PLANEACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=13885",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Seguro por muerte a beneficiarios de docentes oficiales",
+    "Dependencia": "EDUCACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=16414",
+    "Tiempo ": "3 Mes(es)",
+    "Costo": "Estampilla de Pro Hospital Universitarios de Santander, Pro Electrificación Rural, sistematización, Todo certificado o constancia que expidan los funcionarios municipales",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Sobretasa municipal o distrital a la gasolina motor",
+    "Dependencia": "hacienda",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=15810",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Avalúo y/o liquidación, La Tarifa de la sobretasa a la Gasolina Motor será del dieciocho y medio por ciento (18.5%) del precio de referencia de venta al público",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "PROCEDIMIENTO",
+    "Nombre": "Solicitud de levantamiento de inenagenabilidad",
+    "Dependencia": "VALORIZACION",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=61425",
+    "Tiempo ": "5Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Supervisión delegado de sorteos y concursos",
+    "Dependencia": "DELEGADO DESPACHO",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=51079",
+    "Tiempo ": "15 Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  },
+  {
+    "Tipo": "TRAMITE",
+    "Nombre": "Vacunación antirrábica de caninos y felinos",
+    "Dependencia": "SALUD",
+    "Modalida ": "PRESENCIAL",
+    "Link ": "N/A",
+    "LinkRequisitos": "https://visorsuit.funcionpublica.gov.co/auth/visor?fi=19214",
+    "Tiempo ": "5Día(s) Hábil(es)",
+    "Costo": "Sin costo",
+    "Normatividad": "En proceso"
+  }
+];
+
+    // ========================================
+    // PERSONALIZACIONES DE TRÁMITES
+    // ========================================
+    // Aquí puedes agregar personalizaciones para trámites específicos
+    // Usa el nombre EXACTO del trámite como clave
+    const personalizaciones = {
+      // Ejemplo 1: Trámite con botón personalizado y descripción
+      /*
+      "Certificado de residencia": {
+        descripcion: "Este trámite te permite obtener un certificado oficial de residencia en el municipio de Bucaramanga.",
+        botones: [
+          {
+            texto: "Descargar Formato",
+            icono: "fas fa-file-pdf",
+            url: "https://ejemplo.com/formato-residencia.pdf",
+            color: "danger" // primary, secondary, success, danger, warning, info
+          }
+        ]
+      },
+      */
+
+      // Ejemplo 2: Trámite con múltiples botones
+      /*
+      "Impuesto predial unificado": {
+        descripcion: "Información importante sobre el impuesto predial unificado.",
+        botones: [
+          {
+            texto: "Ver Tutorial",
+            icono: "fas fa-video",
+            url: "https://ejemplo.com/tutorial.mp4",
+            color: "info"
+          },
+          {
+            texto: "Descargar Formato",
+            icono: "fas fa-file-download",
+            url: "https://ejemplo.com/formato.pdf",
+            color: "success"
+          }
+        ],
+        destacado: true // Agrega un borde especial al trámite
+      }
+      */
+    };
+
+    // Función para obtener personalización de un trámite
+    function obtenerPersonalizacion(nombreTramite) {
+      return personalizaciones[nombreTramite] || null;
+    }
+
+    // Función para renderizar botones personalizados
+    function renderizarBotonesPersonalizados(botones) {
+      if (!botones || !botones.length) return "";
+
+      return `
+        <div class="mt-3 d-flex flex-wrap gap-2">
+          ${botones.map(btn => `
+            <a href="${btn.url}" target="_blank" rel="noopener noreferrer"
+               class="btn btn-${btn.color || 'primary'} btn-sm">
+              <i class="${btn.icono || 'fas fa-link'} me-2"></i>${btn.texto}
+            </a>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Función para renderizar descripción personalizada
+    function renderizarDescripcionPersonalizada(descripcion) {
+      if (!descripcion) return "";
+
+      return `
+        <div class="alert alert-info mt-3 mb-0">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Información adicional:</strong> ${descripcion}
+        </div>
+      `;
+    }
+
+    // Función para determinar si un trámite es gratuito
+    function esGratuito(costo) {
+      const costoTexto = normalizarTexto(costo).toLowerCase();
+      return costoTexto.includes("gratuito") || 
+             costoTexto.includes("sin costo") || 
+             costoTexto.includes("gratis") ||
+             costoTexto === "0" ||
+             costoTexto === "$0";
+    }
+
+    const normalizarTexto = (v) => (v ?? "").toString().trim();
+    function canonModalidad(m){
+      const s = normalizarTexto(m).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+      if (s.includes("presencial")) return "PRESENCIAL";
+      if (s.includes("parcial"))    return "PARCIALMENTE EN LÍNEA";
+      if (s.includes("linea"))      return "EN LÍNEA";
+      return "PRESENCIAL";
+    }
+    const getModalidadClass = (m) => m==="PRESENCIAL"?"modalidad-presencial":(m==="PARCIALMENTE EN LÍNEA"?"modalidad-parcial":"modalidad-online");
+    const getModalidadIcon  = (m) => m==="PRESENCIAL"?"fas fa-building":(m==="PARCIALMENTE EN LÍNEA"?"fas fa-laptop-house":"fas fa-globe");
+    function isSafeHttpUrl(u){ 
+      try{
+        const url = normalizarTexto(u);
+        if (!url || url === "" || url === "-" || url.toLowerCase() === "n/a") return false;
+        const t=new URL(url,location.origin);
+        return["http:","https:"].includes(t.protocol);
+      }catch{
+        return false;
+      } 
+    }
+
+    function formatearNormatividad(n){
+      const v = normalizarTexto(n);
+      if(!v || v.toLowerCase()==="en proceso") return ["En proceso de definición"];
+      const partes = v.split("/").map(x=>x.trim()).filter(Boolean);
+      return partes.length?partes:["En proceso de definición"];
+    }
+    function crearBotonNormatividad(normatividad,id){
+      const normas=formatearNormatividad(normatividad);
+      const resumen=normas.slice(0,2).join(" • ");
+      return `
+        <div class="normatividad-section p-3 mt-3">
+          <div class="d-flex justify-content-between align-items-center collapse-toggle"
+               data-bs-toggle="collapse" data-bs-target="#norma-${id}" aria-expanded="false">
+            <div>
+              <strong class="text-green"><i class="fas fa-gavel me-2"></i>Normatividad</strong>
+              <div class="small text-muted mt-1">${resumen}${normas.length>2?"...":""}</div>
+            </div>
+            <i class="fas fa-chevron-down text-green"></i>
+          </div>
+          <div class="collapse mt-3" id="norma-${id}">
+            <div class="normatividad-content">
+              <ul class="list-unstyled mb-0">
+                ${normas.map(n=>`<li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>${n}</li>`).join("")}
+              </ul>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function crearDuracionValor(tiempo,id){
+      const t=normalizarTexto(tiempo); if(!t) return "—";
+      const LIM=40; if(t.length<=LIM) return t;
+      return `<button class="toggle" type="button" data-bs-toggle="collapse" data-bs-target="#dur-${id}">Ver más</button>`;
+    }
+    function crearDuracionPanel(tiempo,id){
+      const t=normalizarTexto(tiempo); if(!t || t.length<=40) return "";
+      return `
+        <div id="dur-${id}" class="collapse">
+          <div class="duration-panel">
+            ${t}
+            <div>
+              <button class="toggle mt-1" type="button" data-bs-toggle="collapse" data-bs-target="#dur-${id}">Ver menos</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    let tramites=[], tramitesFiltrados=[], paginaActual=1;
+
+    function procesarTramitesData(){
+      return (tramitesData||[]).map((t,i)=>({
+        id: i+1,
+        tipo: normalizarTexto(t.Tipo || "TRAMITE"),
+        nombre: normalizarTexto(t.Nombre),
+        dependencia: normalizarTexto(t.Dependencia).toUpperCase(),
+        modalidad: canonModalidad(t.Modalidad || t["Modalida "] || ""),
+        link: normalizarTexto(t.Link || t["Link "] || ""),
+        tiempo: normalizarTexto(t.Tiempo || t["Tiempo "] || ""),
+        costo: normalizarTexto(t.Costo),
+        normatividad: normalizarTexto(t.Normatividad)
+      }));
+    }
+
+    function construirFiltrosUnicos(){
+      const deps=new Set(), mods=new Set();
+      tramites.forEach(t=>{ if(t.dependencia) deps.add(t.dependencia); if(t.modalidad) mods.add(t.modalidad); });
+
+      document.getElementById("dependencia").innerHTML =
+        `<option value="">Todas las Dependencias</option>${[...deps].sort().map(d=>`<option value="${d}">${d}</option>`).join("")}`;
+
+      document.getElementById("modalidad").innerHTML =
+        `<option value="">Todas las Modalidades</option>${[...mods].map(m=>`<option value="${m}">${m}</option>`).join("")}`;
+    }
+
+    function calcularPaginacion(total, porPag, pagAct){
+      const totalPag=Math.max(1, Math.ceil(total/porPag));
+      const ini=(pagAct-1)*porPag, fin=Math.min(ini+porPag,total);
+      return { totalPag, ini, fin, rIni: total?ini+1:0, rFin: fin };
+    }
+
+    function renderizarPaginacion(total){
+      const cont=document.getElementById("pagination-container");
+      const pag=document.getElementById("pagination");
+      const rIni=document.getElementById("inicio-rango");
+      const rFin=document.getElementById("fin-rango");
+      const tot=document.getElementById("total-items");
+
+      if(!total){ cont.style.display="none"; return; }
+
+      const porPag=parseInt(document.getElementById("itemsPorPagina").value)||10;
+      const { totalPag, rIni:a, rFin:b } = calcularPaginacion(total, porPag, paginaActual);
+
+      rIni.textContent=a; rFin.textContent=b; tot.textContent=total;
+
+      if(totalPag<=1){ cont.style.display="none"; return; }
+      cont.style.display="block";
+
+      let html="";
+      if(paginaActual>1) html += `<button class="btn btn-outline-green btn-sm" onclick="cambiarPagina(${paginaActual-1})"><i class="fas fa-chevron-left me-1"></i>Anterior</button>`;
+      for(let i=1;i<=totalPag;i++){
+        const cls=i===paginaActual?"btn-green":"btn-outline-secondary";
+        html+=`<button class="btn ${cls} btn-sm" onclick="cambiarPagina(${i})">${i}</button>`;
+      }
+      if(paginaActual<totalPag) html += `<button class="btn btn-outline-green btn-sm" onclick="cambiarPagina(${paginaActual+1})">Siguiente<i class="fas fa-chevron-right ms-1"></i></button>`;
+      pag.innerHTML=html;
+    }
+
+    function renderizarTramites(lista){
+      const cont=document.getElementById("tramites-container");
+      const noRes=document.getElementById("no-results");
+
+      if(!lista || !lista.length){
+        cont.style.display="none"; noRes.style.display="block"; renderizarPaginacion(0); return;
+      }
+      cont.style.display="block"; noRes.style.display="none";
+
+      const porPag=parseInt(document.getElementById("itemsPorPagina").value)||10;
+      const { ini, fin } = calcularPaginacion(lista.length, porPag, paginaActual);
+      const page = lista.slice(ini, fin);
+
+      cont.innerHTML = page.map(t=>{
+        const link=isSafeHttpUrl(t.link);
+        const costoShort = esGratuito(t.costo) ? "Gratuito" : "Con Costo";
+
+        // Obtener personalización si existe
+        const personalizacion = obtenerPersonalizacion(t.nombre);
+        const claseDestacado = personalizacion?.destacado ? ' tramite-card-destacado position-relative' : '';
+
+        return `
+          <div class="tramite-card p-4 mb-4 shadow-sm${claseDestacado}">
+            <div class="row">
+              <!-- Col izquierda -->
+              <div class="col-lg-8 col-md-7">
+                <div class="mb-3">
+                  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    ${link
+                      ? `<a href="${t.link}" target="_blank" rel="noopener noreferrer" class="text-decoration-none fs-5 fw-bold text-green">${t.nombre}</a><i class="fas fa-external-link-alt text-green ms-1" style="font-size:.8rem;"></i>`
+                      : `<h5 class="fs-5 fw-bold text-green mb-0">${t.nombre}</h5>`}
+                  </div>
+                  <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="info-pill"><i class="fas fa-building me-1"></i>${t.dependencia}</span>
+                    <span class="modalidad-badge ${getModalidadClass(t.modalidad)}"><i class="${getModalidadIcon(t.modalidad)} me-1"></i>${t.modalidad}</span>
+                  </div>
+                  
+                  ${link ? `
+                    <div class="mt-2 mb-2">
+                      <a href="${t.link}" target="_blank" rel="noopener noreferrer" class="btn btn-green btn-sm">
+                        <i class="fas fa-arrow-right me-2"></i>Ir al trámite
+                      </a>
+                    </div>` : `
+                    <div class="mt-2 mb-2">
+                      <span class="badge bg-secondary">
+                        <i class="fas fa-map-marker-alt me-1"></i>Trámite presencial
+                      </span>
+                    </div>`}
+
+                  ${crearBotonNormatividad(t.normatividad, t.id)}
+
+                  ${personalizacion ? renderizarDescripcionPersonalizada(personalizacion.descripcion) : ''}
+                  ${personalizacion?.botones ? renderizarBotonesPersonalizados(personalizacion.botones) : ''}
+                </div>
+              </div>
+
+              <!-- Col derecha: box de Costo / Duración / Modalidad -->
+              <div class="col-lg-4 col-md-5 mt-3 mt-md-0">
+                <div class="border border-2 rounded-3 p-3">
+                  <div class="row g-3">
+                    <div class="col-4 text-center sep-md">
+                      <div class="stats-icon"><i class="fas fa-dollar-sign"></i></div>
+                      <div class="small fw-semibold text-muted mb-1">Costo</div>
+                      <div class="small fw-bold text-green">${costoShort}</div>
+                    </div>
+                    <div class="col-4 text-center sep-md">
+                      <div class="stats-icon"><i class="fas fa-clock"></i></div>
+                      <div class="small fw-semibold text-muted mb-1">Duración</div>
+                      <div class="small fw-bold text-green">${crearDuracionValor(t.tiempo, t.id)}</div>
+                    </div>
+                    <div class="col-4 text-center">
+                      <div class="stats-icon"><i class="fas fa-laptop"></i></div>
+                      <div class="small fw-semibold text-muted mb-1">Modalidad</div>
+                      <div class="small fw-bold text-green">${t.modalidad}</div>
+                    </div>
+                  </div>
+
+                  <!-- Panel desplegable de duración ocupando todo el ancho del box -->
+                  ${crearDuracionPanel(t.tiempo, t.id)}
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }).join("");
+
+      renderizarPaginacion(lista.length);
+      document.querySelector(".container")?.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+
+    function actualizarContador() {
+      const contador = document.getElementById("filtered-count");
+      if (contador) {
+        contador.textContent = tramitesFiltrados.length;
+      }
+    }
+
+    function filtrarTramites(){
+      const dep=(document.getElementById("dependencia").value||"").toUpperCase();
+      const mod=canonModalidad(document.getElementById("modalidad").value||"");
+      const costo=(document.getElementById("costo").value||"").toLowerCase();
+      const q=(document.getElementById("busqueda").value||"").toLowerCase();
+
+      // DEBUG: Ver qué filtros están activos
+      console.log('🔍 Filtros aplicados:', {dep, mod, costo, q, totalTramites: tramites.length});
+
+      tramitesFiltrados = tramites.filter(t=>{
+        const okDep = !dep || t.dependencia === dep;
+        const okMod = !mod || canonModalidad(t.modalidad) === mod;
+        const okCosto = !costo || (
+          (costo === "gratuito" && esGratuito(t.costo)) ||
+          (costo === "pago" && !esGratuito(t.costo))
+        );
+        const okQ   = !q  || t.nombre.toLowerCase().includes(q) || t.dependencia.toLowerCase().includes(q);
+        return okDep && okMod && okCosto && okQ;
+      });
+
+      // DEBUG: Ver resultado del filtro
+      console.log('✅ Resultado filtrado:', tramitesFiltrados.length, 'trámites');
+
+      paginaActual = 1;
+      actualizarContador();
+      renderizarTramites(tramitesFiltrados);
+    }
+
+    function limpiarFiltros(){
+      document.getElementById("dependencia").value = "";
+      document.getElementById("modalidad").value   = "";
+      document.getElementById("costo").value       = "";
+      document.getElementById("busqueda").value    = "";
+      document.getElementById("itemsPorPagina").value = "10";
+
+      tramitesFiltrados = [...tramites];
+      paginaActual = 1;
+      actualizarContador();
+      renderizarTramites(tramitesFiltrados);
+    }
+
+    function filtrarPorDependencia(btn, dep){
+      document.getElementById("dependencia").value = dep || "";
+      filtrarTramites();
+    }
+
+    function cambiarPagina(n){
+      const porPag = parseInt(document.getElementById("itemsPorPagina").value)||10;
+      const totalPag = Math.ceil((tramitesFiltrados.length||0)/porPag);
+      if(n<1 || n>totalPag) return;
+      paginaActual = n;
+      renderizarTramites(tramitesFiltrados);
+    }
+
+    // Listeners
+    document.getElementById("busqueda").addEventListener("input", filtrarTramites);
+    document.getElementById("dependencia").addEventListener("change", filtrarTramites);
+    document.getElementById("modalidad").addEventListener("change", filtrarTramites);
+    document.getElementById("costo").addEventListener("change", filtrarTramites);
+    document.getElementById("itemsPorPagina").addEventListener("change", ()=>{
+      paginaActual = 1;
+      renderizarTramites(tramitesFiltrados);
+    });
+
+    // Init
+    document.addEventListener("DOMContentLoaded", ()=>{
+      tramites = procesarTramitesData();
+      tramitesFiltrados = [...tramites];
+      construirFiltrosUnicos();
+      actualizarContador();
+      renderizarTramites(tramitesFiltrados);
+      console.log(`Cargados ${tramites.length} trámites`);
+    });
+
+    window.addEventListener("resize", ()=>{
+      if(tramitesFiltrados.length) renderizarTramites(tramitesFiltrados);
+    });
+  </script>
+</body>
+<br>
+<br>
+<br>
+</html>
