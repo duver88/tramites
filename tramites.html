@@ -1794,7 +1794,7 @@
 
     function filtrarTramites(){
       const dep=(document.getElementById("dependencia").value||"").toUpperCase();
-      const mod=canonModalidad(document.getElementById("modalidad").value||"");
+      const mod=document.getElementById("modalidad").value ? canonModalidad(document.getElementById("modalidad").value) : "";
       const costo=(document.getElementById("costo").value||"").toLowerCase();
       const q=(document.getElementById("busqueda").value||"").toLowerCase();
 
